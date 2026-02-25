@@ -935,7 +935,7 @@ function renderAll(d) {
   buildRows(d.submarket, 't-submarket',{rank:true,hasPrice:true});
   buildRows(d.sector,    't-sector',   {rank:true,hasPrice:false,hasHoldings:true,spyBenchmark:true});
   buildRows(d.sectorew,  't-sectorew', {rank:true,hasPrice:false,hasHoldings:true,spyBenchmark:true});
-  buildRows(d.thematic,  't-thematic', {rank:true,hasPrice:true,hasHoldings:true});
+  buildRows((d.thematic||[]).slice(0,10), 't-thematic', {rank:true,hasPrice:true,hasHoldings:true});
   buildRows(d.country,   't-country',  {rank:true,hasPrice:true,hasHoldings:true});
 
   // Crypto
