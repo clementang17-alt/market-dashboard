@@ -1044,12 +1044,12 @@ COMMODITIES
 // ═══════════════════════════════════════════════════
 function toTvSym(raw) {
   const MAP = {
-    'ES1!':'CME_MINI:ES1!','NQ1!':'CME_MINI:NQ1!',
-    'RTY1!':'CME_MINI:RTY1!','YM1!':'CBOT_MINI:YM1!',
-    'DX-Y.NYB':'TVC:DXY','CBOE:VIX':'CBOE:VIX','VIX':'CBOE:VIX',
-    'GC1!':'COMEX:GC1!','SI1!':'COMEX:SI1!','HG1!':'COMEX:HG1!',
-    'PL1!':'NYMEX:PL1!','PA1!':'NYMEX:PA1!','ALI1!':'COMEX:ALI1!',
-    'CL1!':'NYMEX:CL1!','NG1!':'NYMEX:NG1!',
+    'ES1!':'TVC:SPX','NQ1!':'TVC:NDX',
+    'RTY1!':'TVC:RUT','YM1!':'TVC:DJI',
+    'DX-Y.NYB':'TVC:DXY','CBOE:VIX':'TVC:VIX','VIX':'CBOE:VIX',
+    'GC1!':'TVC:GOLD','SI1!':'TVC:SILVER','HG1!':'TVC:COPPER',
+    'PL1!':'TVC:PLATINUM','PA1!':'TVC:PALLADIUM','ALI1!':'TVC:ALUMINIUM',
+    'CL1!':'TVC:USOIL','NG1!':'TVC:NATGAS',
     'US2Y':'TVC:US02Y','US10Y':'TVC:US10Y','US30Y':'TVC:US30Y',
     '^N225':'TVC:NI225','^KS11':'KRX:KOSPI','^NSEI':'NSE:NIFTY',
     '000001.SS':'SSE:000001','000300.SS':'SSE:000300',
@@ -1066,7 +1066,7 @@ function openChart(rawSym, name) {
   const url = 'https://s.tradingview.com/widgetembed/?frameElementId=tv_frame'
     + '&symbol=' + encodeURIComponent(tvSym)
     + '&interval=D&hidesidetoolbar=0&symboledit=1&saveimage=0'
-    + '&toolbarbg=131722&studies=%5B%5D&theme=dark&style=1'
+    + '&toolbarbg=131722&studies='+encodeURIComponent(JSON.stringify([{"id":"MAExp@tv-basicstudies","inputs":{"length":10},"overrides":{"Plot.color":"rgba(100,255,150,1)","Plot.linewidth":1}},{"id":"MAExp@tv-basicstudies","inputs":{"length":20},"overrides":{"Plot.color":"rgba(180,120,255,1)","Plot.linewidth":1}},{"id":"MA@tv-basicstudies","inputs":{"length":50},"overrides":{"Plot.color":"rgba(30,144,255,1)","Plot.linewidth":1}},{"id":"MA@tv-basicstudies","inputs":{"length":200},"overrides":{"Plot.color":"rgba(255,80,80,1)","Plot.linewidth":1}}]))+'&theme=dark&style=1'
     + '&timezone=exchange&withdateranges=1&showpopupbutton=1'
     + '&studies_overrides=%7B%7D&overrides=%7B%7D'
     + '&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en';
