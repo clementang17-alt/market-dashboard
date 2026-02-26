@@ -1252,5 +1252,61 @@ renderAll = function(d) {
 
 if (typeof DATA !== 'undefined' && DATA && DATA.generated_at) renderAll(DATA);
 </script>
+<script>
+// ── SHARE BUTTON OVERRIDE ────────────────────────────────────────────────────
+shareX = function() {
+  var target = document.querySelector('.wrap') || document.body;
+  showToast('📸 Capturing screenshot…', 8000);
+  html2canvas(target, {
+    backgroundColor: '#07090d',
+    scale: window.devicePixelRatio || 1,
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    windowWidth: document.documentElement.scrollWidth,
+    windowHeight: document.documentElement.scrollHeight
+  }).then(function(canvas) {
+    canvas.toBlob(function(blob) {
+      var tweetUrl = 'https://twitter.com/intent/tweet?text=' +
+        encodeURIComponent('Market Dashboard — ' + new Date().toLocaleDateString('en-HK',{day:'2-digit',month:'short',year:'numeric'}) + ' #markets #trading');
+      if (navigator.clipboard && navigator.clipboard.write) {
+        navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+          .then(function() {
+            showToast('✅ Screenshot copied — paste with Ctrl+V in X / OneNote');
+            window.open(tweetUrl, '_blank');
+          })
+          .catch(function() {
+            showToast('⚠ Clipboard blocked — opening X anyway');
+            window.open(tweetUrl, '_blank');
+          });
+      } else {
+        var url = canvas.toDataURL('image/png');
+        var a = document.createElement('a');
+        a.href = url; a.download = 'market-snapshot-' + new Date().toISOString().slice(0,10) + '.png';
+        a.click();
+        showToast('💾 Image downloaded — attach it to your X post');
+        window.open(tweetUrl, '_blank');
+      }
+    }, 'image/png');
+  }).catch(function(err) {
+    showToast('❌ Screenshot failed: ' + err.message);
+  });
+};
+
+function showToast(msg, ms) {
+  ms = ms || 3500;
+  var t = document.getElementById('_snap_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_snap_toast';
+    t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#0c1a2a;color:#00c8ff;border:1px solid #1c3550;padding:13px 24px;border-radius:8px;font-size:13px;z-index:9999;pointer-events:none;transition:opacity .4s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(function(){ t.style.opacity = '0'; }, ms);
+}
+</script>
 </body>
 </html>
