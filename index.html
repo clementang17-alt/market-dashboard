@@ -995,7 +995,7 @@ function renderAll(d) {
 
     // How stale?
     const ageHrs=Math.round((Date.now()-dt.getTime())/3600000);
-    document.getElementById('dataAge').textContent=`Updated ${ageHrs}h ago · Auto-refreshes daily 06:00 HKT · Yahoo Finance (no API key)`;
+    document.getElementById('dataAge').textContent=`Updated ${ageHrs}h ago · Page auto-refreshes every 15 min`;
   }
 }
 
@@ -1196,6 +1196,8 @@ function renderBreadth(d) {
 window.addEventListener('load',()=>{
   loadData();
   calc();
+  // Silent re-fetch every 15 min to pick up intraday price refreshes
+  setInterval(loadData, 15 * 60 * 1000);
 });
 
 // ═══════════════════════════════════════════════════════
