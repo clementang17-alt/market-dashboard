@@ -995,7 +995,7 @@ function renderAll(d) {
 
     // How stale?
     const ageHrs=Math.round((Date.now()-dt.getTime())/3600000);
-    document.getElementById('dataAge').textContent=`Updated ${ageHrs}h ago · Page auto-refreshes every 15 min`;
+    document.getElementById('dataAge').textContent=`Updated ${ageHrs}h ago · Refreshes daily at 06:00 HKT`;
   }
 }
 
@@ -1196,8 +1196,8 @@ function renderBreadth(d) {
 window.addEventListener('load',()=>{
   loadData();
   calc();
-  // Silent re-fetch every 15 min to pick up intraday price refreshes
-  setInterval(loadData, 15 * 60 * 1000);
+  // Silent re-fetch every 60 min in case the daily data has refreshed
+  setInterval(loadData, 60 * 60 * 1000);
 });
 
 // ═══════════════════════════════════════════════════════
