@@ -607,17 +607,16 @@ def fetch_breadth():
 
 # ── MAIN FETCH ──────────────────────────────────────────────────────────────────────────────────────────────────────
 def fetch_all(prices_only=False):
-    # In prices-only mode, preserve existing holdings & breadth from last full run
+    # Always load existing data.json so we can fall back to it if the API fails
     existing = {}
-    if prices_only:
-        out_path = Path('data/data.json')
-        if out_path.exists():
-            try:
-                with open(out_path) as f:
-                    existing = json.load(f)
-                print(f"✓ Loaded existing data.json (will preserve holdings & breadth)")
-            except Exception as e:
-                print(f"⚠ Could not load existing data.json: {e}")
+    out_path = Path('data/data.json')
+    if out_path.exists():
+        try:
+            with open(out_path) as f:
+                existing = json.load(f)
+            print(f"✓ Loaded existing data.json (fallback if API fails)")
+        except Exception as e:
+            print(f"⚠ Could not load existing data.json: {e}")
 
     output = {
         'generated_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -706,9 +705,9 @@ def fetch_all(prices_only=False):
     for key in ('country', 'sector', 'sectorew', 'thematic', 'submarket'):
         output[key].sort(key=lambda x: x.get('w1', 0), reverse=True)
 
-    # In prices-only mode, if any Massive-backed section came back empty (API failure),
+    # If any Massive-backed section came back empty (e.g. 429 rate limit),
     # preserve existing data rather than overwriting with empty arrays.
-    if prices_only and existing:
+    if existing:
         massive_sections = ['etfmain', 'submarket', 'sector', 'sectorew',
                             'thematic', 'country', 'crypto', 'global', 'yields']
         for key in massive_sections:
