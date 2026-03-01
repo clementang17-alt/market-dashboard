@@ -628,19 +628,22 @@ def fetch_all(prices_only=False):
         'breadth':  existing.get('breadth',  {}),
     }
 
-    # Batches using Massive API (ETFs, crypto, global indices, VIX)
-    massive_batches = [
+    # US ETF sections: always yfinance (Massive API has T+1 delay for US equities)
+    yf_etf_batches = [
         ('etfmain',   ETF_MAIN),
         ('submarket', SUBMARKET),
         ('sector',    SECTOR),
         ('sectorew',  SECTOR_EW),
         ('thematic',  THEMATIC),
         ('country',   COUNTRY),
+    ]
+    # Non-US / crypto: use Massive when available (real-time), else yfinance
+    massive_batches = [
         ('crypto',    CRYPTO_YF),
         ('global',    GLOBAL_IDX),  # global indices via Massive Indices API (I: prefix)
         ('dxvix',     ['^VIX']),    # VIX via Massive Indices API
     ]
-    # Batches using yfinance (futures, metals, energy, DXY)
+    # Always yfinance: futures, metals, energy, DXY
     yf_batches = [
         ('futures',   FUTURES),
         ('metals',    METALS),
@@ -652,10 +655,23 @@ def fetch_all(prices_only=False):
     if prices_only:
         print(f"Prices-only mode — using yfinance to avoid Massive API rate limits")
     elif use_massive:
-        print(f"✓ MASSIVE_API_KEY found — using Massive API for ETFs & crypto")
+        print(f"✓ MASSIVE_API_KEY found — using Massive API for global indices & crypto")
     else:
         print(f"⚠ MASSIVE_API_KEY not set — falling back to yfinance for all tickers")
 
+    # Fetch US ETFs via yfinance (always — Massive is T+1 delayed for US equities)
+    for key, tickers in yf_etf_batches:
+        print(f"Fetching {key} ({len(tickers)} tickers) via yfinance...")
+        raw = fetch_batch(tickers)
+        for yf_sym in tickers:
+            rec = raw.get(yf_sym)
+            if rec:
+                output[key].append(rec)
+            else:
+                print(f"  \u26a0 No data for {yf_sym}")
+        time.sleep(1)
+
+    # Fetch global indices & crypto via Massive (if available), else yfinance
     for key, tickers in massive_batches:
         print(f"Fetching {key} ({len(tickers)} tickers) via {'Massive' if use_massive else 'yfinance'}...")
         raw = fetch_batch_massive(tickers) if use_massive else fetch_batch(tickers)
@@ -705,8 +721,8 @@ def fetch_all(prices_only=False):
     for key in ('country', 'sector', 'sectorew', 'thematic', 'submarket'):
         output[key].sort(key=lambda x: x.get('w1', 0), reverse=True)
 
-    # If any Massive-backed section came back empty (e.g. 429 rate limit),
-    # preserve existing data rather than overwriting with empty arrays.
+    # If any section came back empty (API failure), preserve existing data
+    # rather than overwriting with empty arrays.
     if existing:
         massive_sections = ['etfmain', 'submarket', 'sector', 'sectorew',
                             'thematic', 'country', 'crypto', 'global', 'yields']
