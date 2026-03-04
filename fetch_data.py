@@ -376,6 +376,23 @@ def _calc_ema(closes, period):
         ema = float(c) * k + ema * (1.0 - k)
     return ema
 
+def fetch_individual(tickers, retries=2):
+    """Fetch tickers one-by-one via Ticker.history(). More reliable than batch
+    download for international indices where yf.download() can return stale data."""
+    results = {}
+    for sym in tickers:
+        for attempt in range(retries):
+            try:
+                df = yf.Ticker(sym).history(period='1y', interval='1d', auto_adjust=True)
+                if df is not None and not df.empty:
+                    results[sym] = extract_metrics(df, sym)
+                break
+            except Exception as e:
+                print(f"  Attempt {attempt+1} failed for {sym}: {e}")
+                time.sleep(2)
+        time.sleep(0.3)
+    return results
+
 def fetch_batch(tickers, retries=3):
     results = {}
     for attempt in range(retries):
@@ -639,9 +656,12 @@ def fetch_all(prices_only=False):
     ]
     # Always yfinance: all price data (Massive has T+1 delay across all asset classes)
     # Massive is kept only for the treasury yield curve (Economy API).
+    # Global indices fetched individually (batch download returns stale data for non-US indices).
+    yf_individual_batches = [
+        ('global',    GLOBAL_IDX),
+    ]
     yf_batches = [
         ('crypto',    CRYPTO_YF),
-        ('global',    GLOBAL_IDX),
         ('dxvix',     ['^VIX', 'DX-Y.NYB']),
         ('futures',   FUTURES),
         ('metals',    METALS),
@@ -656,7 +676,18 @@ def fetch_all(prices_only=False):
     else:
         print(f"⚠ MASSIVE_API_KEY not set — all data via yfinance")
 
-    # Fetch all price sections via yfinance (always — Massive has T+1 delay)
+    # Fetch global indices individually (batch download returns stale data for non-US indices)
+    for key, tickers in yf_individual_batches:
+        print(f"Fetching {key} ({len(tickers)} tickers) via yfinance (individual)...")
+        raw = fetch_individual(tickers)
+        for yf_sym in tickers:
+            rec = raw.get(yf_sym)
+            if rec:
+                output[key].append(rec)
+            else:
+                print(f"  \u26a0 No data for {yf_sym}")
+
+    # Fetch all other price sections via yfinance batch download
     for key, tickers in yf_etf_batches + yf_batches:
         print(f"Fetching {key} ({len(tickers)} tickers) via yfinance...")
         raw = fetch_batch(tickers)
